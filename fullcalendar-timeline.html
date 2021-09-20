@@ -19,6 +19,8 @@
   <link href='/fullcalendar-scheduler-1.9.4/scheduler.css' rel='stylesheet' />
   <script src='/fullcalendar-scheduler-1.9.4/scheduler.js'></script>
 
+  <style>
+  </style>
   <script>
 
     var resources = [
@@ -56,11 +58,11 @@
     var resource = { id: 'z', title: 'Auditorium Z' };
 
     var events = [
-      { id: '1', resourceId: 'b', start: '2018-04-07T02:00:00', end: '2018-04-07T07:00:00', title: 'event 1' },
+      { id: '1', resourceId: 'b', start: '2018-04-07T02:00:00', end: '2018-04-07T07:00:00', title: 'event 1', description: 'description' },
       { id: '2', resourceId: 'c', start: '2018-04-07T05:00:00', end: '2018-04-07T22:00:00', title: 'event 2' },
       { id: '3', resourceId: 'd', start: '2018-04-06', end: '2018-04-08', title: 'event 3' },
       { id: '4', resourceId: 'e', start: '2018-04-07T03:00:00', end: '2018-04-07T08:00:00', title: 'event 4' },
-      { id: '5', resourceId: 'f', start: '2018-04-07T00:30:00', end: '2018-04-07T02:30:00', title: 'event 5' }
+      { id: '5', resourceId: 'f', start: '2018-04-07', end: '2018-04-07', title: 'event 5' }
     ];
     // backgroundColor:event 背景色 
     // borderColor: event 边框色
@@ -68,7 +70,7 @@
 
 
     $(function () { // document ready
-      return;
+
       var timeline = $('#calendar').fullCalendar({
         schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', //license
         now: '2018-04-07',
@@ -89,7 +91,7 @@
           }
         },
         resourceLabelText: 'Rooms',
-        resources: resources,
+        //resources: resources,
         events: events,
         eventResize: function (event, delta, revertFunc) {
           console.log(event.title + " start is now " + event.start.format());
@@ -109,6 +111,10 @@
         }
       });
 
+      timeline.fullCalendar('option', {
+        resourceLabelText: 'Rooms2',
+        resources: resources,
+      });
 
       // 更新event
       event1 = events[0].id;
@@ -121,10 +127,12 @@
       timeline.fullCalendar('updateEvent', event1);
 
       // 添加新的events
-      timeline.fullCalendar('addEventSource', [event6]);
+      //timeline.fullCalendar('addEventSource', [event6]);
+
+      //timeline.fullCalendar('refetchEventSources',events);
 
       // 删除events
-      timeline.fullCalendar('removeEvents', [6]);
+      //timeline.fullCalendar('removeEvents', [6]);
 
     });
 
@@ -137,15 +145,12 @@
           self = this;
 
         _options = {
-          now: options.now || '',
           resourceLabelText: options.resourceLabelText || '',
           resources: options.resources || null,
           events: options.events || null,
           locale: options.locale || 'zh-cn',
-          height: options.height || '',
-          weekNumbers: false,
-          weekNumbersWithinDays: false,
-          smallDayDateFormat: 'D',
+          height: options.height || null,
+          resourceAreaWidth: 200,
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', //license
           editable: true, // enable draggable events
           eventResourceEditable: false, // Determines whether the user can drag events between resources.
@@ -162,13 +167,27 @@
           },
           eventDrop: function (event, delta, revertFunc) {
             self.eventChange.call(self, event, options.eventChange);
-          }
+          },
+          eventRender: function (eventObj, $el) {
+            // $el.popover({
+            //   title: eventObj.title,
+            //   content: eventObj.description || '',
+            //   trigger: 'hover',
+            //   placement: 'top',
+            //   container: 'body'
+            // });
+            $el.attr('title', eventObj.description || '');
+          },
         };
 
+        if (options.now) {
+          _options.now = options.now;
+        }
         this.options = _options;
         this.elem = $elem;
 
         this.init();
+        this.loaction();
       }
 
       GanttTimeline.prototype.init = function () {
@@ -226,6 +245,26 @@
         this.elem.fullCalendar('removeEvents', events);
       }
 
+      GanttTimeline.prototype.resize = function (height) {
+        this.elem.fullCalendar('option', 'height', height);
+      }
+
+      GanttTimeline.prototype.loaction = function () {
+        if (!this.options.now) {
+          return;
+        }
+
+        var elem = this.elem.find('.fc-time-area.fc-widget-content .fc-scroller'),
+          scrollWidth = elem[0].scrollWidth,
+          range = scrollWidth / 12,
+          date = new Date(this.options.now),
+          month = date.getMonth() + 1,
+          day = date.getDate(),
+          left = range * (month - 1) + range * ((day - 3) / 30);
+
+        elem.scrollLeft(left);
+      }
+
       window.GanttTimeline = GanttTimeline;
 
     })(jQuery, window);
@@ -233,7 +272,7 @@
 
     $(function () {
       var ganttTimeline = new GanttTimeline($('#calendar-2'), {
-        now: '2018-04-07',
+        now: '2018-04-05',
         resourceLabelText: 'Room',
         resources: resources,
         events: events,
